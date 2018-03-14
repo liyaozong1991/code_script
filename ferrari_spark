@@ -1,0 +1,67 @@
+#!/bin/bash
+echo '# coding: utf8
+
+import sys
+import os
+
+from pyspark.sql import SparkSession
+import math
+import time
+import logging
+
+# log 配置
+logging.basicConfig(filename="./logs", level=logging.INFO, format="[%(levelname)s]\t%(asctime)s\tLINENO:%(lineno)d\t%(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
+spark = SparkSession\
+    .builder\
+    .appName("")\
+    .config("spark.executor.memory", "4g")\
+    .getOrCreate()
+
+lines = spark.read.text(input_path).rdd.map().persist()' > example.py
+chmod +x example.py
+echo '#!/bin/bash
+
+function log {
+        local msg
+        local logtype
+        logtype=$1
+        msg=$2
+        lineno=$3
+        datetime=`date +'%F %H:%M:%S'`
+        logformat="[${logtype}]\t${datetime}\tLINENO:${lineno}\t${msg}"
+        {   
+        case $logtype in  
+                DEBUG)
+                        [[ $loglevel -le 0 ]] && echo -e "${logformat}" ;;
+                INFO)
+                        [[ $loglevel -le 1 ]] && echo -e "${logformat}" ;;
+                WARNING)
+                        [[ $loglevel -le 2 ]] && echo -e "${logformat}" ;;
+                ERROR)
+                        [[ $loglevel -le 3 ]] && echo -e "${logformat}" ;;
+        esac
+        } | tee -a $logfile
+}
+
+debug () {
+        message=$1
+        lineno=`caller 0 | awk '\''{print$1}'\''`
+        log DEBUG "${message}" ${lineno}
+}
+info() {
+        message=$1
+        lineno=`caller 0 | awk '\''{print$1}'\''`
+        log INFO "${message}" ${lineno}
+}
+warn() {
+        message=$1
+        lineno=`caller 0 | awk '\''{print$1}'\''`
+        log WARNING "${message}" ${lineno}
+}
+error() {
+        message=$1
+        lineno=`caller 0 | awk '\''{print$1}'\''`
+        log ERROR "${message}" ${lineno}
+}' > log_config.sh
+chmod +x log_config.sh
